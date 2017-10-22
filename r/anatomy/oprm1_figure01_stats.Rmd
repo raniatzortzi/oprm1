@@ -5,7 +5,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(wholebrain)
-source('~/Downloads/readroi.R')
+source('./readroi.R')
 load('~/mor_patches_1502_section003_RoiSet.Rdata')
 
 
@@ -89,7 +89,7 @@ mat.dist<-hist(point.on.line[!CPudata$in.patch],  breaks=seq(0,2000,by=30))
 
 quartz(width= 46.523/4, height= 16.072/4)
 par(mar=c(4,4,1,1))
-plot(mat.dist$mids, cumsum(mat.dist$counts), type='l', col='black', xlab='Dorsomedial-Ventrolateral (µm)', ylab='Cumulative tdTomato cells', axes=FALSE, ylim=c(0,1000))
+plot(mat.dist$mids, cumsum(mat.dist$counts), type='l', col='black', xlab='Dorsomedial-Ventrolateral (??m)', ylab='Cumulative tdTomato cells', axes=FALSE, ylim=c(0,1000))
 axis(2, at=c(0,500,1000), las=1)
 axis(1, at=c(0,500,1000, 1500))
 
@@ -129,7 +129,7 @@ mod2<-ks.test(point.on.line[CPudata$in.patch], point.on.line[!CPudata$in.patch])
 ```
 ```{r, echo=FALSE}
 par(mar=c(4,4,1,1))
-plot(mat.dist$mids, cumsum(mat.dist$counts), type='l', col='black', xlab='Dorsomedial-Ventrolateral (µm)', ylab='Cumulative tdTomato cells', axes=FALSE, ylim=c(0,1000))
+plot(mat.dist$mids, cumsum(mat.dist$counts), type='l', col='black', xlab='Dorsomedial-Ventrolateral (??m)', ylab='Cumulative tdTomato cells', axes=FALSE, ylim=c(0,1000))
 axis(2, at=c(0,500,1000), las=1)
 axis(1, at=c(0,500,1000, 1500))
 
