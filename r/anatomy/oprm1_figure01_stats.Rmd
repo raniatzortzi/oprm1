@@ -6,10 +6,10 @@ output: html_document
 ```{r setup, include=FALSE}
 library(wholebrain)
 source('./readroi.R')
-load('~/mor_patches_1502_section003_RoiSet.Rdata')
+#load('~/mor_patches_1502_section003_RoiSet.Rdata')
 
 
-roiFolder<-'/Volumes/Rania8/mor_patches_1502_section003_RoiSet/'
+roiFolder<-'./mor_patches_1502_section003_RoiSet/'
 
 	patches<-read.ijroi(dir(roiFolder, full.names=TRUE)[1])
 	patches <-data.frame(patches$coords)
