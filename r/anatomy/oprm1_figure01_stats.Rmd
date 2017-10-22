@@ -1,0 +1,169 @@
+---
+title: "oprm1_figure01_statsresults"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(wholebrain)
+source('~/Downloads/readroi.R')
+load('~/mor_patches_1502_section003_RoiSet.Rdata')
+
+
+roiFolder<-'/Volumes/Rania8/mor_patches_1502_section003_RoiSet/'
+
+	patches<-read.ijroi(dir(roiFolder, full.names=TRUE)[1])
+	patches <-data.frame(patches$coords)
+	patches$id<-1
+
+for(i in 2:length(dir(roiFolder, full.names=TRUE))){
+	roi<-read.ijroi(dir(roiFolder, full.names=TRUE)[i])
+	roi<-data.frame(roi$coords)
+	roi$id<-i
+	patches<-rbind(patches, roi)
+}
+
+quartz(width=6.894009, height=4.325581)
+par(mfrow=c(1,2), yaxs='i', xaxs='i') # ylim=c(10000, 4000), xlim=c(15000, 11000)
+plot(seg.tdTomato$soma$x, seg.tdTomato$soma$y, pch=16, cex=0.5, col=0, asp=1, ylim=c(4140+4620, 4140), xlim=c(11184, 11184+4044), axes=FALSE, ylab='', xlab='')
+plot.outlines(regi)
+in.patch<-rep(FALSE, length(seg.tdTomato$soma$x))
+for(i in unique(patches$id)){
+	#x<-seg.stain$soma$contour.x[seg.stain$soma$contour.I==i] 
+	#y<-seg.stain$soma$contour.y[seg.stain$soma$contour.I==i] 
+	x<-patches[patches$id==i,1]
+	y<-patches[patches$id==i,2]
+	polygon(x, y, col='pink')
+	inside<-point.in.polygon(seg.tdTomato$soma$x, seg.tdTomato$soma$y, x, y)
+	in.patch[which(inside==1)]<-TRUE
+}
+
+points(seg.tdTomato$soma$x, seg.tdTomato$soma$y, pch=16, cex=0.5, col=in.patch+1)
+polygon( rep(c(11184, 11184+4044), each=2), c(4140, 4140+4620, 4140+4620, 4140))
+
+perc.pm<-prop.table(table(in.patch[which(dataset$acronym=='CP')]))
+
+load('~/mor_patches_classicanimal_section002_RoiSet.Rdata')
+
+perc.pm <-rbind(perc.pm, prop.table(table(in.patch[which(dataset$acronym=='CP')])) )
+
+perc.pm <-data.frame(perc.pm)
+
+names(perc.pm)<-c('Matrix', 'Patch')
+
+library(sciplot)
+
+par(yaxs='r', xaxs='r')
+bargraph.CI(rep(c('Matrix', 'Patch'), each=nrow(perc.pm)), c(perc.pm$Matrix, perc.pm$Patch)*100, ylab='Percent of caudateputamen cells %', ylim=c(0,100), axes=F, col=c(gray(0.15), 'red'))
+axis(2, las=1, at=seq(0,100,by=25) )
+
+for(i in 1:nrow(perc.pm)){
+	lines(c(0.75, 1.9), perc.pm[i,]*100, col='gray')
+	points(c(0.75, 1.9), perc.pm[i,]*100, pch=16,  col='gray')
+}
+mod1<-t.test(perc.pm$Matrix, perc.pm$Patch)
+quartz.save('/Volumes/Rania8/patch_matrix_quant.pdf', 'pdf')
+
+quantline <-structure(list(x = c(12077.1113548207, 14515.3903830719), y = c(5088.92687386204, 
+7436.02454997706)), .Names = c("x", "y"))
+
+
+quantline$x<-seq(quantline$x[1], quantline$x[2], length.out=1000)
+quantline$y<-seq(quantline$y[1], quantline$y[2], length.out=1000)
+
+load('~/mor_patches_1502_section003_RoiSet.Rdata')
+
+
+CPudata<-cbind(dataset, in.patch)[which(dataset$acronym=='CP'&(dataset$right.hemisphere)),]
+
+
+point.on.line<-rep(NA, nrow(CPudata))
+for(i in 1:nrow(CPudata)){
+	distance<-sqrt( (CPudata$x[i]-quantline$x)^2 + (CPudata$y[i]-quantline$y)^2 )
+	point.on.line[i] <-which.min(distance)
+}
+
+point.on.line<- sqrt( (quantline$x[point.on.line[1]]-quantline$x[point.on.line])^2 + (quantline$y[point.on.line[1]]-quantline$y[point.on.line])^2 )*0.64
+
+patch.dist<-hist(point.on.line[CPudata$in.patch], breaks=seq(0,2000,by=30))
+mat.dist<-hist(point.on.line[!CPudata$in.patch],  breaks=seq(0,2000,by=30))
+
+quartz(width= 46.523/4, height= 16.072/4)
+par(mar=c(4,4,1,1))
+plot(mat.dist$mids, cumsum(mat.dist$counts), type='l', col='black', xlab='Dorsomedial-Ventrolateral (µm)', ylab='Cumulative tdTomato cells', axes=FALSE, ylim=c(0,1000))
+axis(2, at=c(0,500,1000), las=1)
+axis(1, at=c(0,500,1000, 1500))
+
+lines(patch.dist$mids, cumsum(patch.dist$counts), col='darkred')
+points(mat.dist$mids, cumsum(mat.dist$counts), pch=16)
+points(patch.dist$mids, cumsum(patch.dist$counts), pch=16, col='red')
+
+quartz.save('/Volumes/Rania8/Dorsomedial_Ventrolateral_axis.pdf', 'pdf')
+
+```
+
+## Results
+
+
+
+```{r}
+mod1<-t.test(perc.pm$Matrix, perc.pm$Patch)
+```
+```{r, echo=FALSE}
+par(yaxs='r', xaxs='r')
+bargraph.CI(rep(c('Matrix', 'Patch'), each=nrow(perc.pm)), c(perc.pm$Matrix, perc.pm$Patch)*100, ylab='Percent of caudateputamen cells %', ylim=c(0,100), axes=F, col=c(gray(0.15), 'red'))
+axis(2, las=1, at=seq(0,100,by=25) )
+
+for(i in 1:nrow(perc.pm)){
+	lines(c(0.75, 1.9), perc.pm[i,]*100, col='gray')
+	points(c(0.75, 1.9), perc.pm[i,]*100, pch=16,  col='gray')
+}
+
+```
+
+
+There was a significant difference in percent of cells in patch (*M* = `r round(mean(perc.pm$Patch)*100, 2)`%, *SD* = `r round(sd(perc.pm$Patch)*100, 2)`%, *n* = `r nrow(perc.pm)`  mice) versus matrix (*M* = `r round(mean(perc.pm$Matrix)*100, 2)`%, *SD* = `r round(sd(perc.pm$Matrix)*100, 2)`%, *n* = `r nrow(perc.pm)`  mice), (*t* = `r round(mod1$statistic,2)`, *df* = `r mod1$parameter`, *p* = `r round(mod1$p.value,3)`).
+
+
+```{r}
+mod2<-ks.test(point.on.line[CPudata$in.patch], point.on.line[!CPudata$in.patch])
+```
+```{r, echo=FALSE}
+par(mar=c(4,4,1,1))
+plot(mat.dist$mids, cumsum(mat.dist$counts), type='l', col='black', xlab='Dorsomedial-Ventrolateral (µm)', ylab='Cumulative tdTomato cells', axes=FALSE, ylim=c(0,1000))
+axis(2, at=c(0,500,1000), las=1)
+axis(1, at=c(0,500,1000, 1500))
+
+lines(patch.dist$mids, cumsum(patch.dist$counts), col='darkred')
+points(mat.dist$mids, cumsum(mat.dist$counts), pch=16)
+points(patch.dist$mids, cumsum(patch.dist$counts), pch=16, col='red')
+```
+
+Matrix cells were more concentrated towards the ventrolateral caudateputamen than the patch cells (`r mod2$method`, *D* = `r round(mod2$statistic,2)`, *p* = `r round(mod2$p.value,3)`)
+
+```{r}
+type<-rep(c('aOprm1+', 'aOprm1+', 'Oprm1-', 'Oprm1-'), each=2)
+location<-rep(c('aPatch', 'Matrix', 'aPatch', 'Matrix'), each=2)
+cells<-c(121, 92, 20, 30, 706, 554, 1622, 6522)
+animal<-rep(c(1,2), 4)
+ctb.data<-data.frame(type, cells, location, animal)
+normalize<-tapply(ctb.data$cells, paste(ctb.data$type, ctb.data$animal), sum)
+ctb.data$perc<-paste(ctb.data$type, ctb.data$animal)
+
+for(i in seq_along(normalize)){
+  ctb.data$perc[which(ctb.data$perc==names(normalize)[i])]<-normalize[i]
+}
+
+ctb.data$perc<- 100*ctb.data$cells/as.numeric(ctb.data$perc)
+
+quartz(width=37.119/8, height=34.691/8)
+par(mar=c(4,4,1,1))
+bargraph.CI(ctb.data$type, ctb.data$perc, ctb.data$location, legend=TRUE, ylab='CTB cells in CPu %', ylim=c(0,100), axes=F, col=c('red', gray(0.15)))
+axis(2, las=1, at=seq(0,100,by=25) )
+points(rep(c(1.5, 2.5, 4.5, 5.5), each=2)+0.2, ctb.data$perc, pch=16, col='gray')
+quartz.save('/Volumes/Rania8/CTB_patch_matrix_quant.pdf', 'pdf')
+
+
+schematic.plot(dataset=NULL, coordinate=-0.22, mm.grid=FALSE, scale.bar=TRUE)
+schematic.plot(dataset=NULL, coordinate= 0, mm.grid=FALSE, scale.bar=TRUE)
+
+```
